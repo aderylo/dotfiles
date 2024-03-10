@@ -28,7 +28,19 @@ COMPLETION_WAITING_DOTS="true"
 
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Example format: plugins=(rails git textmate ruby lighthouse)
-plugins=(git osx zsh-syntax-highlighting brew repo sudo knife vagrant bundler web-search)
+plugins=(
+  git 
+  macos 
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+  brew
+  repo
+  sudo
+  knife
+  vagrant
+  bundler
+  web-search
+)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -40,26 +52,6 @@ fi
 if [ -f $HOME/.profile ]; then
   source $HOME/.profile  # Read Mac .profile, if present.
 fi
-
-# Shell Aliases
-## Git Aliases
-alias gs='git status '
-alias ga='git add '
-alias gb='git branch '
-alias gc='git commit'
-alias gd='git diff'
-alias go='git checkout '
-alias gk='gitk --all&'
-alias gx='gitx --all'
-alias got='git '
-alias get='git '
-
-## Vagrant Aliases
-alias vag='vagrant'
-alias vagup='vagrant up'
-alias vagdestroy='vagrant destroy'
-alias vagssh='vagrant ssh'
-alias vaghalt='vagrant halt'
 
 ## Miscellaneous Aliases
 alias htop='sudo htop'
@@ -76,3 +68,5 @@ qfind () {
 if [ -f /usr/bin/vim ]; then
   export EDITOR=/usr/bin/vim
 fi
+
+export PATH=/Users/aderylo/.local/bin:$PATH

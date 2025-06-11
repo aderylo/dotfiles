@@ -113,7 +113,7 @@ function ubuntu_setup() {
     if ! dpkg -s python3-pip >/dev/null 2>&1; then
       __task "Installing Python3 Pip"
       _cmd "sudo apt-get install -y python3-pip"
-      _cmd "pip3 install jinja2>3.0"
+      _cmd "pip3 install --upgrade jinja2"
     fi
     if ! pip3 list | grep watchdog >/dev/null 2>&1; then
       __task "Installing Python3 Watchdog"

@@ -120,9 +120,9 @@ function ubuntu_setup() {
       _cmd "pip3 install --upgrade jinja2"
     fi
 
-    _cmd "pip3 install --upgrade jinja2"
   fi
 
+   _cmd "pip3 install --upgrade jinja2"
 }
 
 

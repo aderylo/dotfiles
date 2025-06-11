@@ -14,6 +14,12 @@
     path: "{{ ansible_user_dir }}/.config/nvim"
     state: directory
 
+- name: "Neovim | Clone Kickstart Neovim"
+  ansible.builtin.git:
+    repo: "https://github.com/aderylo/kickstart.nvim.git"
+    dest: "{{ ansible_user_dir }}/.config/nvim"
+    force: true
+
 # - name: "Neovim | Create symlink to role files directory"
 #   ansible.builtin.file:
 #     src: "{{ role_path }}/files"

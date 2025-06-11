@@ -18,7 +18,9 @@
   ansible.builtin.git:
     repo: "https://github.com/aderylo/kickstart.nvim.git"
     dest: "{{ ansible_user_dir }}/.config/nvim"
+    version: "fresh"  # Specify the branch name
     force: true
+    update: true
 
 # - name: "Neovim | Create symlink to role files directory"
 #   ansible.builtin.file:

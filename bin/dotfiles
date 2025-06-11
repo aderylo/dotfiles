@@ -61,7 +61,6 @@ function __task {
 # _cmd performs commands with error checking
 function _cmd {
   echo "Executing: $*"
-  "$@"
   #create log if it doesn't exist
   if ! [[ -f $DOTFILES_LOG ]]; then
     touch $DOTFILES_LOG

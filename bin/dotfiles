@@ -120,8 +120,8 @@ function ubuntu_setup() {
     fi
   fi
 
-
-  _cmd "pip3 install --upgrade jinja2"
+    __task "Installing or upgrading Jinja2 to > 3.0"
+    _cmd "pip3 install --upgrade jinja2"
 
 }
 

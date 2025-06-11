@@ -1,0 +1,6 @@
+---
+- name: "conda | Install miniconda via homebrew"
+  community.general.homebrew_cask:
+    name: miniconda
+    state: present
+  when: ansible_distribution == "MacOSX"

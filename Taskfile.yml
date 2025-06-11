@@ -1,8 +1,6 @@
 version: 3
 
 vars:
-  vault_secret:
-    sh: cat $HOME/.ansible-vault/vault.secret
 
 tasks:
   docker-build:

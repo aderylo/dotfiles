@@ -46,15 +46,9 @@ zinit light Aloxaf/fzf-tab
 zinit snippet OMZL::async_prompt.zsh
 zinit snippet OMZL::git.zsh
 zinit snippet OMZP::git
-zinit snippet OMZP::sudo
 zinit snippet OMZP::ssh
 zinit snippet OMZP::aliases
 zinit snippet OMZP::globalias
-zinit snippet OMZP::archlinux
-zinit snippet OMZP::aws
-zinit snippet OMZP::kubectl
-zinit snippet OMZP::kubectx
-zinit snippet OMZP::command-not-found
 
 # Load completions
 autoload -U +X bashcompinit && bashcompinit
@@ -113,4 +107,3 @@ eval "$(fzf --zsh)"
 # zi is defined by zinit as alias zi='zinit'. Unalias it to use with zoxide
 unalias zi
 eval "$(zoxide init zsh)"
-eval "$(gh copilot alias -- zsh)"

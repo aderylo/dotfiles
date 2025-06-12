@@ -108,3 +108,4 @@ eval "$(fzf --zsh)"
 # zi is defined by zinit as alias zi='zinit'. Unalias it to use with zoxide
 unalias zi
 eval "$(zoxide init zsh)"
+eval "$($HOME/miniconda3/bin/conda init zsh)"

@@ -49,6 +49,7 @@ zinit snippet OMZP::git
 zinit snippet OMZP::ssh
 zinit snippet OMZP::aliases
 zinit snippet OMZP::globalias
+zinit snippet OMZP::conda
 
 # Load completions
 autoload -U +X bashcompinit && bashcompinit

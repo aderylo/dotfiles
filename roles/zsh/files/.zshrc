@@ -31,6 +31,11 @@ fi
 # Source/Load zinit
 source "${ZINIT_HOME}/zinit.zsh"
 
+# Early PATH setup for conda detection
+if [[ -d "$HOME/miniconda3/bin" ]]; then
+    export PATH="$HOME/miniconda3/bin:$PATH"
+fi
+
 # Add in Powerlevel10k
 zinit ice depth=1; zinit light romkatv/powerlevel10k
 
@@ -108,4 +113,3 @@ eval "$(fzf --zsh)"
 # zi is defined by zinit as alias zi='zinit'. Unalias it to use with zoxide
 unalias zi
 eval "$(zoxide init zsh)"
-eval "$($HOME/miniconda3/bin/conda init zsh)"

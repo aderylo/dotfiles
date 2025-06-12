@@ -1,13 +1,7 @@
 
 
 ---
-Fully automated development environment setup, inspired by [Techdufus dotfiles repo]().
-
-You can watch a quick 'tour' here on YouTube:
-
-<a href="https://youtu.be/hPPIScBt4Gw">
-    <img src="https://github.com/TechDufus/dotfiles/assets/46715299/b114ea0c-b67b-437b-87d3-7c7732aeccf8" alt="Automating your Dotfiles with Ansible: A Showcase" style="width:60%;"/>
-</a>
+Fully automated development environment setup, inspired by [Techdufus dotfiles repo](https://github.com/TechDufus/dotfiles). To understand the structure and how those dotfiles wor you can watch a quick 'tour' on [YouTube](https://youtu.be/hPPIScBt4Gw) by TechDufus.
 
 Notably, this repo is vastly simplified, e.g. doesn't contain secret managment.
 
@@ -93,12 +87,12 @@ This shell script is also used to initialize your environment after bootstrappin
 > You must follow required steps before running this command or things may become unusable until fixed.
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/TechDufus/dotfiles/main/bin/dotfiles)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles)"
 ```
 
 If you want to run only a specific role, you can specify the following bash command:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/TechDufus/dotfiles/main/bin/dotfiles | bash -s -- --tags comma,seperated,tags
+curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles | bash -s -- --tags comma,seperated,tags
 ```
 
 ### Update

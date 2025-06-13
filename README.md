@@ -1,129 +1,167 @@
+# Automated Development Environment Setup
 
+A fully automated development environment configuration system built with Ansible. This project sets up a complete, personalized development workspace across multiple operating systems with a single command.
 
----
-Fully automated development environment setup, inspired by [Techdufus dotfiles repo](https://github.com/TechDufus/dotfiles). To understand the structure and how those dotfiles wor you can watch a quick 'tour' on [YouTube](https://youtu.be/hPPIScBt4Gw) by TechDufus.
+## What It Does
 
-Notably, this repo is vastly simplified, e.g. doesn't contain secret managment.
+This automation toolkit:
 
+- **Installs and configures essential development tools** like Neovim, Zsh with Powerlevel10k, Node Version Manager (nvm), Conda, fzf, and zoxide
+- **Sets up a beautiful terminal environment** with custom themes, aliases, and productivity shortcuts
+- **Works across operating systems** - currently supports macOS and Ubuntu
+- **Handles system differences automatically** - each tool is configured appropriately for your OS
+- **Manages privilege requirements intelligently** - gracefully handles environments with or without sudo access
+- **Keeps everything up-to-date** - can be run repeatedly to update configurations and tools
 
-## Goals
+Think of it as "Infrastructure as Code" for your personal development environment. Instead of manually installing and configuring dozens of tools every time you set up a new machine, run one command and get a fully configured workspace.
 
-Provide fully automated multiple-OS development environment that is easy to set up and maintain.
+## Quick Start
 
-### Why Ansible?
+### Prerequisites
 
-Ansible replicates what we would do to set up a development environment pretty well. There are many automation solutions out there - I happen to enjoy using Ansible.
+Make sure your system is up to date:
 
-## Requirements
+```bash
+# macOS
+brew update && brew upgrade
 
-### Operating System
-
-This Ansible playbook only supports multiple OS's on a per-role basis. This gives a high level of flexibility to each role.
-
-This means that you can run a role, and it will only run if your current OS is configured for that role.
-
-This is accomplished with this `template` `main.yml` task in each role:
-```yaml
----
-- name: "{{ role_name }} | Checking for Distribution Config: {{ ansible_distribution }}"
-  ansible.builtin.stat:
-    path: "{{ role_path }}/tasks/{{ ansible_distribution }}.yml"
-  register: distribution_config
-
-- name: "{{ role_name }} | Run Tasks: {{ ansible_distribution }}"
-  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
-  when: distribution_config.stat.exists
-```
-The first task checks for the existence of a `roles/<target role>/tasks/<current_distro>.yml` file. If that file exists (example `current_distro:MacOSX` and a `MacOSX.yml` file exists) it will be run automatically. This keeps roles from breaking if you run a role that isn't yet supported or configured for the system you are running `dotfiles` on.
-
-Currently configured 'bootstrap-able' OS's:
-- Ubuntu
-- MacOSX (darwin)
-
-`bootstrap-able` means the pre-dotfiles setup is configured and performed automatically by this project. For example, before we can run this ansible project, we must first install ansible on each OS type.
-
-To see details, see the `__task "Loading Setup for detected OS: $ID"` section of the `bin/dotfiles` script to see how each OS type is being handled.
-
-### System Upgrade
-
-Verify your `supported OS` installation has all latest packages installed before running the playbook.
-
-```
 # Ubuntu
 sudo apt-get update && sudo apt-get upgrade -y
-# MacOSX (brew)
-brew update && brew upgrade
 ```
 
-> [!NOTE]
-> This may take some time...
+### Install Everything
 
-## Setup
+Run this single command to set up your entire development environment:
 
-### all.yml values file
-
-The `all.yml` file allows you to personalize your setup to your needs, you can comment out default roles you don't wish to install. For example:
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles)"
 ```
+
+That's it! The script will:
+1. Detect your operating system
+2. Install required dependencies (Git, Ansible)
+3. Clone this repository to `~/.dotfiles`
+4. Run the full setup automatically
+
+**Important:** On first run, you'll need to reboot your computer to complete the setup. Alternatively, you can restart the shell by running `exec zsh` and you should be good to go! 
+
+### Install Specific Tools Only
+
+If you only want certain tools, you can run specific roles:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles | bash -s -- --tags neovim,zsh,fzf
+```
+
+Available tags: `conda`, `nvm`, `neovim`, `zsh`, `zoxide`, `fzf`
+
+## Daily Usage (Post Installation) 
+
+After installation, use the `dotfiles` command to update your environment:
+
+```bash
+# Update everything
+dotfiles
+
+# Update specific tools with verbose output
+dotfiles -t neovim,zsh -vvv
+
+# Test changes without applying them
+dotfiles --check
+```
+
+The `dotfiles` command supports tab completion for tags and passes all arguments directly to Ansible.
+
+## Customization
+
+### Disable Unwanted Tools
+
+Edit `~/.dotfiles/group_vars/all.yml` to customize which tools get installed. For example, 
+if you don't need conda, just comment it out:
+
+```yaml
 default_roles:
-# - conda
+# - conda          # Comment out to skip conda
   - nvm
   - neovim
   - zsh
   - zoxide
   - fzf
 ```
-will disable conda installation task. This way you can configure per system ansible playbook without significant code changes. After inital [installation](#install) the fhis file will be located at `~/.dotfiles/group_vars/all.yaml` and include your desired settings.
 
+### Modify Tool Configurations
 
-## Usage
+Each tool lives in its own role under [`roles/`](roles/). For example:
+- [`roles/zsh/`](roles/zsh/) - Zsh configuration and themes
+- [`roles/neovim/`](roles/neovim/) - Neovim setup and plugins
+- [`roles/nvm/`](roles/nvm/) - Node.js version management
 
-### Install
+## How It Works
 
-This playbook includes a custom shell script located at `bin/dotfiles`. This script is added to your $PATH after installation and can be run multiple times while making sure any Ansible dependencies are installed and updated.
+### Multi-OS Support
 
-This shell script is also used to initialize your environment after bootstrapping your `supported-OS` and performing a full system upgrade as mentioned above.
+Each role automatically detects your operating system and runs the appropriate tasks. The system works by:
 
-> [!NOTE]
-> You must follow required steps before running this command or things may become unusable until fixed.
+1. Checking if a role supports your OS (looks for `roles/<role>/tasks/<YourOS>.yml`)
+2. Running OS-specific installation and configuration tasks
+3. Skipping roles that don't support your current OS
 
-```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles)"
+### Privilege Management
+
+The system intelligently handles sudo requirements:
+- Automatically detects if you have sudo access
+- Gracefully skips system-level tasks when sudo isn't available
+- Provides user-space alternatives when possible
+- See [`roles/README_SUDO.md`](roles/README_SUDO.md) for technical details
+
+## Extending the System
+
+### Adding a New Tool
+
+1. Create a new role: `mkdir -p roles/newtool/tasks`
+2. Add OS-specific task files: `roles/newtool/tasks/MacOSX.yml`, `roles/newtool/tasks/Ubuntu.yml`
+3. Create the main role file using the template:
+
+```yaml
+# roles/newtool/tasks/main.yml
+---
+- name: "newtool | Checking for Distribution Config: {{ ansible_distribution }}"
+  ansible.builtin.stat:
+    path: "{{ role_path }}/tasks/{{ ansible_distribution }}.yml"
+  register: distribution_config
+
+- name: "newtool | Run Tasks: {{ ansible_distribution }}"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+  when: distribution_config.stat.exists
 ```
 
-If you want to run only a specific role, you can specify the following bash command:
-```bash
-curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles | bash -s -- --tags comma,seperated,tags
-```
+4. Add your role to `default_roles` in [`group_vars/all.yml`](group_vars/all.yml)
 
-### Update
+For a comprehensive tour of how the repository works internally and is structured, watch the TechDufus YouTube video.
+This repository follows the same structure, although it is simplified as it strips down the complexity of
+secret management and other advanced features, which are useful but require more knowledge to avoid potential issues.
 
-This repository is continuously updated with new features and settings which become available to you when updating.
+Furthermore, since this repository follows the same structure as the [TechDufus one](https://github.com/TechDufus/dotfiles), you can simply grab one of his role configurations, put it in the `roles` folder, add it as a default role in `group_vars/all.yml`, and you're golden!  
 
-To update your environment run the `dotfiles` command in your shell:
+### Supporting a New OS
 
-```bash
-dotfiles
-```
+1. Add OS detection logic to [`bin/dotfiles`](bin/dotfiles)
+2. Create OS-specific task files for existing roles
+3. Test thoroughly with the new OS
 
-This will handle the following tasks:
+### Working Without Sudo
 
-- Verify Ansible is up-to-date
-- Clone this repository locally to `~/.dotfiles`
-- Verify any `ansible-galaxy` plugins are updated
-- Run this playbook with the values in `~/.config/dotfiles/group_vars/all.yaml`
+When creating roles, always consider non-sudo environments:
+- Use `when: has_sudo | default(false)` for tasks requiring privileges
+- Provide alternatives like installing to `~/.local/bin` instead of `/usr/local/bin`
+- See [`roles/README_SUDO.md`](roles/README_SUDO.md) for patterns and examples
 
-This `dotfiles` command is available to you after the first use of this repo, as it adds this repo's `bin` directory to your path, allowing you to call `dotfiles` from anywhere.
+## Technical Details
 
-Any flags or arguments you pass to the `dotfiles` command are passed as-is to the `ansible-playbook` command.
+- **Built with:** Ansible playbooks for cross-platform automation
+- **Inspired by:** [TechDufus dotfiles](https://github.com/TechDufus/dotfiles) ([YouTube tour](https://youtu.be/hPPIScBt4Gw))
+- **License:** Apache 2.0
+- **Requirements:** Git (installed automatically), Ansible (installed automatically)
+- **Supported OS:** macOS, Ubuntu (others can be added by extending roles)
 
-For Example: Running the tmux tag with verbosity
-```bash
-dotfiles -t tmux -vvv
-```
-
-As an added bonus, the tags have tab completion!
-```bash
-dotfiles -t <tab><tab>
-dotfiles -t t<tab>
-dotfiles -t ne<tab>
-```
+The project structure prioritizes modularity - each tool is independent and can be run, updated, or modified separately.

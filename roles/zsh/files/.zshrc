@@ -108,6 +108,7 @@ eval "$(fzf --zsh)"
 # zi is defined by zinit as alias zi='zinit'. Unalias it to use with zoxide
 unalias zi
 eval "$(zoxide init zsh)"
+eval "$(ssh-agent -s)"
 
 # conda setup
 __conda_setup="$('$HOME/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"

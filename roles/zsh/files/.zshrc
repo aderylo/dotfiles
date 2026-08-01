@@ -1,80 +1,45 @@
-is_ssh_session() {
-  [[ -n "$SSH_CONNECTION" || -n "$SSH_CLIENT" || -n "$SSH_TTY" ]]
-}
+#!/usr/bin/env zsh
 
-if is_ssh_session; then
-  # REASON: When sshing via ghostty, the remote terminal borks,
-  # so we need to set TERM to xterm-256color
-  export TERM=xterm-256color
-fi
-
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-if [[ -f "/opt/homebrew/bin/brew" ]] then
-  # If you're using macOS, you'll want this enabled
+# Homebrew provides the current shell's package environment on macOS.
+if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
-# Set the directory we want to store zinit and plugins
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+# Zinit manages only shell plugins. It is installed by the zinit Ansible role;
+# leaving this conditional keeps a new or remote shell usable during setup.
+ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
+if [[ -r "$ZINIT_HOME/zinit.zsh" ]]; then
+  source "$ZINIT_HOME/zinit.zsh"
 
-# Download Zinit, if it's not there yet
-if [ ! -d "$ZINIT_HOME" ]; then
-  mkdir -p "$(dirname $ZINIT_HOME)"
-  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+  # Completion definitions must be loaded before compinit.
+  zinit light zsh-users/zsh-completions
+  autoload -U +X bashcompinit && bashcompinit
+  autoload -Uz compinit && compinit
+  zinit cdreplay -q
+
+  zinit light zsh-users/zsh-autosuggestions
+  # Keep syntax highlighting last so it can observe the final command line.
+  zinit light zsh-users/zsh-syntax-highlighting
+else
+  autoload -U +X bashcompinit && bashcompinit
+  autoload -Uz compinit && compinit
 fi
-
-# Source/Load zinit
-source "${ZINIT_HOME}/zinit.zsh"
-
-# Add in Powerlevel10k
-zinit ice depth=1; zinit light romkatv/powerlevel10k
-
-# Add in zsh plugins
-zinit light zsh-users/zsh-syntax-highlighting
-zinit light zsh-users/zsh-completions
-zinit light zsh-users/zsh-autosuggestions
-# zinit ice depth=1; zinit light jeffreytse/zsh-vi-mode
-
-# Add in snippets
-# Needed for loading next git.zsh without [_defer_async_git_register:4: command not found: _omz_register_handler errors]
-zinit snippet OMZL::async_prompt.zsh
-zinit snippet OMZL::git.zsh
-zinit snippet OMZP::git
-zinit snippet OMZP::ssh
-zinit snippet OMZP::aliases
-zinit snippet OMZP::globalias
-zinit snippet OMZP::conda
-
-# Load completions
-autoload -U +X bashcompinit && bashcompinit
-autoload -Uz compinit && compinit
-
-zinit cdreplay -q
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Keybindings
 bindkey -e
 bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
+# zsh-autosuggestions wraps this widget to accept a suggestion one word at a time.
+bindkey '^y' forward-word
 bindkey '^[w' kill-region
-bindkey '^n' forward-word # auto-accept partial suggestion from zsh-autosuggestion
 bindkey '^[[3~' delete-char
 bindkey '^[OH' beginning-of-line
 bindkey '^[OF' end-of-line
 
-
 # History
 HISTSIZE=10000
-HISTFILE=~/.zsh_history
+HISTFILE="$HOME/.zsh_history"
 SAVEHIST=$HISTSIZE
-HISTDUP=erase
 setopt appendhistory
 setopt sharehistory
 setopt hist_ignore_space
@@ -87,26 +52,15 @@ setopt hist_find_no_dups
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
-# All custom functions
-for file in $HOME/.config/zsh/*.zsh; do
+
+# Load the small, reviewed modules deployed to ~/.config/zsh.
+for file in "$HOME"/.config/zsh/*.zsh(N); do
   source "$file"
 done
 
-if [[ -f ~/.raftrc ]]; then source ~/.raftrc; fi
+[[ -r "$HOME/.raftrc" ]] && source "$HOME/.raftrc"
 
-
-# Shell integrations
-eval "$(ssh-agent -s)"
-
-# conda setup
-__conda_setup="$('$HOME/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "$HOME/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="$HOME/miniconda3/bin:$PATH"
-    fi
+# Starship is optional until its role has been deployed.
+if (( $+commands[starship] )); then
+  eval "$(starship init zsh)"
 fi
-unset __conda_setup

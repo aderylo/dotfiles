@@ -14,12 +14,6 @@
     dest: "{{ ansible_user_dir }}/.zshrc"
     mode: "0644"
 
-- name: "ZSH | Copy .p10k.zsh"
-  ansible.builtin.copy:
-    src: ".p10k.zsh"
-    dest: "{{ ansible_user_dir }}/.p10k.zsh"
-    mode: "0644"
-
 - name: "ZSH | Copy custom zsh config"
   ansible.builtin.copy:
     dest: "{{ ansible_user_dir }}/.config/"

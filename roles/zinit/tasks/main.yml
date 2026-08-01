@@ -1,0 +1,13 @@
+---
+- name: "Zinit | Create data directory"
+  ansible.builtin.file:
+    path: "{{ ansible_env.XDG_DATA_HOME | default(ansible_env.HOME + '/.local/share', true) }}/zinit"
+    state: directory
+    mode: "0755"
+
+- name: "Zinit | Install plugin manager"
+  ansible.builtin.git:
+    repo: https://github.com/zdharma-continuum/zinit.git
+    dest: "{{ ansible_env.XDG_DATA_HOME | default(ansible_env.HOME + '/.local/share', true) }}/zinit/zinit.git"
+    version: main
+    update: true

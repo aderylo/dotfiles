@@ -2,4 +2,6 @@ default_roles:
   - conda
   - nvm
   - neovim
+  - starship
+  - zinit
   - zsh

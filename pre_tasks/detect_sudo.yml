@@ -69,7 +69,7 @@
   when: not has_sudo
   block:
     - name: Check if sudo credentials are cached
-      command: sudo -v
+      command: sudo -n -v
       register: sudo_cached_test
       check_mode: false
       ignore_errors: true
@@ -78,7 +78,7 @@
       no_log: true
 
     - name: Test sudo with potentially cached password
-      command: sudo {{ sudo_test_command }}
+      command: sudo -n {{ sudo_test_command }}
       register: sudo_cached_exec
       check_mode: false
       ignore_errors: true

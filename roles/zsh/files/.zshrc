@@ -96,9 +96,6 @@ if [[ -f ~/.raftrc ]]; then source ~/.raftrc; fi
 
 
 # Shell integrations
-# zi is defined by zinit as alias zi='zinit'. Unalias it to use with zoxide
-unalias zi
-eval "$(zoxide init zsh)"
 eval "$(ssh-agent -s)"
 
 # conda setup

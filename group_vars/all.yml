@@ -3,4 +3,3 @@ default_roles:
   - nvm
   - neovim
   - zsh
-  - zoxide

@@ -6,7 +6,7 @@ A fully automated development environment configuration system built with Ansibl
 
 This automation toolkit:
 
-- **Installs and configures essential development tools** like Neovim, Zsh with Powerlevel10k, Node Version Manager (nvm), Conda, fzf, and zoxide
+- **Installs and configures essential development tools** like Neovim, Zsh with Powerlevel10k, Node Version Manager (nvm), Conda, and zoxide
 - **Sets up a beautiful terminal environment** with custom themes, aliases, and productivity shortcuts
 - **Works across operating systems** - currently supports macOS and Ubuntu
 - **Handles system differences automatically** - each tool is configured appropriately for your OS
@@ -50,10 +50,10 @@ That's it! The script will:
 If you only want certain tools, you can run specific roles:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles | bash -s -- --tags neovim,zsh,fzf
+curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles | bash -s -- --tags neovim,zsh
 ```
 
-Available tags: `conda`, `nvm`, `neovim`, `zsh`, `zoxide`, `fzf`
+Available tags: `conda`, `nvm`, `neovim`, `zsh`, `zoxide`
 
 ## Daily Usage (Post Installation) 
 
@@ -86,7 +86,6 @@ default_roles:
   - neovim
   - zsh
   - zoxide
-  - fzf
 ```
 
 ### Modify Tool Configurations

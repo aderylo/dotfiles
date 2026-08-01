@@ -4,5 +4,3 @@ default_roles:
   - neovim
   - zsh
   - zoxide
-  - fzf
-

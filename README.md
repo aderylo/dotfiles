@@ -6,7 +6,7 @@ A fully automated development environment configuration system built with Ansibl
 
 This automation toolkit:
 
-- **Installs and configures essential development tools** like Neovim, Zsh with Powerlevel10k, Node Version Manager (nvm), and Conda
+- **Installs and configures essential development tools** like Neovim, Zsh with Starship, Node Version Manager (nvm), and Conda
 - **Sets up a beautiful terminal environment** with custom themes, aliases, and productivity shortcuts
 - **Works across operating systems** - currently supports macOS and Ubuntu
 - **Handles system differences automatically** - each tool is configured appropriately for your OS
@@ -53,7 +53,7 @@ If you only want certain tools, you can run specific roles:
 curl -fsSL https://raw.githubusercontent.com/aderylo/dotfiles/main/bin/dotfiles | bash -s -- --tags neovim,zsh
 ```
 
-Available tags: `conda`, `nvm`, `neovim`, `zsh`
+Available tags: `conda`, `nvm`, `neovim`, `starship`, `zinit`, `zsh`
 
 ## Daily Usage (Post Installation) 
 
@@ -136,8 +136,7 @@ The system intelligently handles sudo requirements:
 4. Add your role to `default_roles` in [`group_vars/all.yml`](group_vars/all.yml)
 
 For a comprehensive tour of how the repository works internally and is structured, watch the TechDufus YouTube video.
-This repository follows the same structure, although it is simplified as it strips down the complexity of
-secret management and other advanced features, which are useful but require more knowledge to avoid potential issues.
+This repository follows the same structure, but is intentionally kept small and avoids embedded secret-management workflows.
 
 Furthermore, since this repository follows the same structure as the [TechDufus one](https://github.com/TechDufus/dotfiles), you can simply grab one of his role configurations, put it in the `roles` folder, add it as a default role in `group_vars/all.yml`, and you're golden!  
 

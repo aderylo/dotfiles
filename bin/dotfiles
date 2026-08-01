@@ -38,14 +38,9 @@ RIGHT_ANGLE="${GREEN}\xE2\x88\x9F${NC}"
 set -e
 
 # Paths
-VAULT_SECRET_FILE="$HOME/.ansible-vault/vault.secret"
-OP_INSTALLED=false
-OP_AUTHENTICATED=false
-OP_VAULT_SECRET=""
 ID=""
 DOTFILES_LOG="$HOME/.dotfiles.log"
 DOTFILES_DIR="$HOME/.dotfiles"
-SSH_DIR="$HOME/.ssh"
 IS_FIRST_RUN="$HOME/.dotfiles_run"
 # _header colorize the given argument with spacing
 function __task {
@@ -81,15 +76,6 @@ function _cmd {
   rm $DOTFILES_LOG
   # exit installation
   exit 1
-}
-
-function _clear_task {
-  TASK=""
-}
-
-function _task_done {
-  printf "${OVERWRITE}${LGREEN} [✓]  ${LGREEN}${TASK}\n"
-  _clear_task
 }
 
 function ubuntu_setup() {
@@ -197,14 +183,6 @@ case $dotfiles_os in
 esac
 
 
-if ! [[ -f "$SSH_DIR/authorized_keys" ]]; then
-  __task "Generating SSH keys"
-  _cmd "mkdir -p $SSH_DIR"
-  _cmd "chmod 700 $SSH_DIR"
-  _cmd "ssh-keygen -b 4096 -t rsa -f $SSH_DIR/id_rsa -N '' -C $USER@$HOSTNAME"
-  _cmd "cat $SSH_DIR/id_rsa.pub >> $SSH_DIR/authorized_keys"
-fi
-
 if ! [[ -d "$DOTFILES_DIR" ]]; then
   __task "Cloning repository"
   _cmd "git clone --quiet https://github.com/aderylo/dotfiles.git $DOTFILES_DIR"
@@ -216,9 +194,6 @@ fi
 pushd "$DOTFILES_DIR" 2>&1 > /dev/null
 update_ansible_galaxy $ID
 
-# confirmVaultAccess
-
-rm -f $VAULT_SECRET_FILE
 ansible-playbook "$DOTFILES_DIR/main.yml" "$@"
 
 popd 2>&1 > /dev/null

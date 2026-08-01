@@ -17,6 +17,7 @@
     - name: Check for brew (macOS)
       command: which brew
       register: brew_check
+      check_mode: false
       ignore_errors: true
       changed_when: false
       no_log: true
@@ -24,6 +25,7 @@
     - name: Check for apt-get (Debian/Ubuntu)
       command: which apt-get
       register: apt_check
+      check_mode: false
       ignore_errors: true
       changed_when: false
       no_log: true
@@ -31,6 +33,7 @@
     - name: Check for pacman (Arch)
       command: which pacman
       register: pacman_check
+      check_mode: false
       ignore_errors: true
       changed_when: false
       no_log: true
@@ -48,6 +51,7 @@
     - name: Test sudo without password
       command: sudo -n {{ sudo_test_command }}
       register: sudo_nopass_test
+      check_mode: false
       ignore_errors: true
       changed_when: false
       failed_when: false
@@ -67,6 +71,7 @@
     - name: Check if sudo credentials are cached
       command: sudo -v
       register: sudo_cached_test
+      check_mode: false
       ignore_errors: true
       changed_when: false
       failed_when: false
@@ -75,6 +80,7 @@
     - name: Test sudo with potentially cached password
       command: sudo {{ sudo_test_command }}
       register: sudo_cached_exec
+      check_mode: false
       ignore_errors: true
       changed_when: false
       failed_when: false
@@ -97,6 +103,7 @@
     - name: Test doas (OpenBSD/some Linux)
       command: doas {{ sudo_test_command }}
       register: doas_test
+      check_mode: false
       ignore_errors: true
       changed_when: false
       failed_when: false
@@ -113,6 +120,7 @@
     - name: Test pkexec (PolicyKit)
       command: pkexec --disable-internal-agent {{ sudo_test_command }}
       register: pkexec_test
+      check_mode: false
       ignore_errors: true
       changed_when: false
       failed_when: false

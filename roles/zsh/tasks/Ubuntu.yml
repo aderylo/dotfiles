@@ -4,6 +4,7 @@
 - name: "Zsh | {{ ansible_distribution }} | Check if zsh is already installed"
   ansible.builtin.command: which zsh
   register: zsh_check
+  check_mode: false
   changed_when: false
   failed_when: false
   no_log: true
@@ -11,6 +12,7 @@
 - name: "Zsh | {{ ansible_distribution }} | Get current shell"
   ansible.builtin.command: echo $SHELL
   register: current_shell
+  check_mode: false
   changed_when: false
 
 # System-wide installation with sudo

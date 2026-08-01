@@ -5,6 +5,14 @@ if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
+# Some SSH hosts do not have Ghostty's terminfo entry. Preserve it when the
+# host supports it, otherwise use the broadly available xterm definition.
+if [[ -n ${SSH_CONNECTION:-} && $TERM == xterm-ghostty ]]; then
+  if (( ! $+commands[infocmp] )) || ! infocmp "$TERM" &>/dev/null; then
+    export TERM=xterm-256color
+  fi
+fi
+
 # Zinit manages only shell plugins. It is installed by the zinit Ansible role;
 # leaving this conditional keeps a new or remote shell usable during setup.
 ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit/zinit.git"
@@ -62,5 +70,6 @@ done
 
 # Starship is optional until its role has been deployed.
 if (( $+commands[starship] )); then
+  export STARSHIP_LOG=error
   eval "$(starship init zsh)"
 fi

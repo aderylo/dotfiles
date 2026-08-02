@@ -37,12 +37,7 @@ fi
 bindkey -e
 bindkey '^p' history-search-backward
 bindkey '^n' history-search-forward
-# zsh-autosuggestions wraps this widget to accept a suggestion one word at a time.
 bindkey '^y' forward-word
-bindkey '^[w' kill-region
-bindkey '^[[3~' delete-char
-bindkey '^[OH' beginning-of-line
-bindkey '^[OF' end-of-line
 
 # History
 HISTSIZE=10000

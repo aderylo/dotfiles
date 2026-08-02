@@ -1,7 +1,7 @@
 default_roles:
-  - conda
   - nvm
   - neovim
-  - starship
   - zinit
   - zsh
+  # Run after zsh so `conda init` updates the deployed shell configuration.
+  - conda

@@ -68,8 +68,7 @@ done
 
 [[ -r "$HOME/.raftrc" ]] && source "$HOME/.raftrc"
 
-# Starship is optional until its role has been deployed.
-if (( $+commands[starship] )); then
-  export STARSHIP_LOG=error
-  eval "$(starship init zsh)"
-fi
+# Keep the prompt native and let integrations such as Conda prepend their
+# active environment normally. Only the status arrow uses color so the prompt
+# remains readable with both light and dark terminal themes.
+PROMPT='%n in %~ %(?.%F{green}.%F{red})❯%f '

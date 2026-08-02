@@ -1,80 +1,110 @@
 #!/bin/bash
+# shellcheck shell=bash
 
-# color codes
-RESTORE='\033[0m'
+# Catppuccin Mocha colors used by the task UI.
 NC='\033[0m'
-BLACK='\033[00;30m'
-RED='\033[00;31m'
-GREEN='\033[00;32m'
-YELLOW='\033[00;33m'
-BLUE='\033[00;34m'
-PURPLE='\033[00;35m'
-CYAN='\033[00;36m'
-SEA="\\033[38;5;49m"
-LIGHTGRAY='\033[00;37m'
-LBLACK='\033[01;30m'
-LRED='\033[01;31m'
-LGREEN='\033[01;32m'
-LYELLOW='\033[01;33m'
-LBLUE='\033[01;34m'
-LPURPLE='\033[01;35m'
-LCYAN='\033[01;36m'
-WHITE='\033[01;37m'
-OVERWRITE='\e[1A\e[K'
+CAT_RED='\033[38;2;243;139;168m'
+CAT_MAROON='\033[38;2;235;160;172m'
+CAT_GREEN='\033[38;2;166;227;161m'
+CAT_TEAL='\033[38;2;148;226;213m'
+CAT_SAPPHIRE='\033[38;2;116;199;236m'
+CAT_BLUE='\033[38;2;137;180;250m'
+CAT_TEXT='\033[38;2;205;214;244m'
+CAT_OVERLAY1='\033[38;2;127;132;156m'
 
-#emoji codes
-CHECK_MARK="${GREEN}\xE2\x9C\x94${NC}"
-X_MARK="${RED}\xE2\x9C\x96${NC}"
-PIN="${RED}\xF0\x9F\x93\x8C${NC}"
-CLOCK="${GREEN}\xE2\x8C\x9B${NC}"
-ARROW="${SEA}\xE2\x96\xB6${NC}"
-BOOK="${RED}\xF0\x9F\x93\x8B${NC}"
-HOT="${ORANGE}\xF0\x9F\x94\xA5${NC}"
-WARNING="${RED}\xF0\x9F\x9A\xA8${NC}"
-RIGHT_ANGLE="${GREEN}\xE2\x88\x9F${NC}"
-
-
+CHECK_MARK="${CAT_GREEN}\xE2\x9C\x94${NC}"
+ARROW="${CAT_SAPPHIRE}\xE2\x96\xB6${NC}"
 
 set -e
 
-# Paths
-ID=""
+if ! command -v tput >/dev/null 2>&1; then
+  printf "${CAT_RED}Error: 'tput' is required but not found.${NC}\n" >&2
+  exit 1
+fi
+
+# Paths and task state
 DOTFILES_LOG="$HOME/.dotfiles.log"
 DOTFILES_DIR="$HOME/.dotfiles"
 IS_FIRST_RUN="$HOME/.dotfiles_run"
-# _header colorize the given argument with spacing
-function __task {
-  # if _task is called while a task was set, complete the previous
-  if [[ $TASK != "" ]]; then
-    printf "${OVERWRITE}${LGREEN} [✓]  ${LGREEN}${TASK}\n"
+TASK=""
+SPINNER_PID=""
+
+cleanup() {
+  if [[ $SPINNER_PID != "" ]]; then
+    kill "$SPINNER_PID" 2>/dev/null || true
+    wait "$SPINNER_PID" 2>/dev/null || true
   fi
-  # set new task title and print
-  TASK=$1
-  printf "${LBLACK} [ ]  ${TASK} \n${LRED}"
+  tput cnorm 2>/dev/null || true
+  printf "${NC}"
 }
 
-# _cmd performs commands with error checking
-function _cmd {
-  echo "Executing: " "$*"
-  #create log if it doesn't exist
-  if ! [[ -f $DOTFILES_LOG ]]; then
-    touch $DOTFILES_LOG
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+_spinner() {
+  local task_text=$1
+  local chars=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+  local char
+
+  tput civis 2>/dev/null || true
+  while true; do
+    for char in "${chars[@]}"; do
+      printf "\r\033[K${CAT_OVERLAY1} [${CAT_SAPPHIRE}%s${CAT_OVERLAY1}]  ${CAT_TEXT}%s${NC}" "$char" "$task_text" >&2
+      sleep 0.08
+    done
+  done
+}
+
+__task() {
+  if [[ $TASK != "" ]] && [[ $SPINNER_PID != "" ]]; then
+    _task_done
   fi
-  # empty conduro.log
-  > $DOTFILES_LOG
-  # hide stdout, on error we print and exit
-  if eval "$1" 1> /dev/null 2> $DOTFILES_LOG; then
-    return 0 # success
+
+  TASK=$1
+  _spinner "$TASK" &
+  SPINNER_PID=$!
+  disown "$SPINNER_PID" 2>/dev/null || true
+}
+
+_clear_task() {
+  TASK=""
+}
+
+_task_done() {
+  if [[ $SPINNER_PID != "" ]]; then
+    kill "$SPINNER_PID" 2>/dev/null || true
+    wait "$SPINNER_PID" 2>/dev/null || true
+    SPINNER_PID=""
   fi
-  # read error from log and add spacing
-  printf "${OVERWRITE}${LRED} [X]  ${TASK}${LRED}\n"
-  while read line; do
-    printf "      ${line}\n"
-  done < $DOTFILES_LOG
+
+  tput cnorm 2>/dev/null || true
+  printf "\r\033[K${CAT_GREEN} [✓]  ${CAT_TEXT}%s${NC}\n" "$TASK"
+  _clear_task
+}
+
+_cmd() {
+  : > "$DOTFILES_LOG"
+
+  if eval "$1" > /dev/null 2> "$DOTFILES_LOG"; then
+    return 0
+  fi
+
+  if [[ $SPINNER_PID != "" ]]; then
+    kill "$SPINNER_PID" 2>/dev/null || true
+    wait "$SPINNER_PID" 2>/dev/null || true
+    SPINNER_PID=""
+  fi
+
+  tput cnorm 2>/dev/null || true
+  printf "\r\033[K${CAT_RED} [✗]  ${CAT_TEXT}%s${NC}\n" "$TASK"
+
+  local line
+  while IFS= read -r line; do
+    printf "      ${CAT_MAROON}%s${NC}\n" "$line"
+  done < "$DOTFILES_LOG"
   printf "\n"
-  # remove log file
-  rm $DOTFILES_LOG
-  # exit installation
+  rm -f "$DOTFILES_LOG"
   exit 1
 }
 
@@ -93,21 +123,6 @@ function ubuntu_setup() {
     __task "Installing Python3"
     _cmd "sudo apt-get install -y python3"
   fi
-
-  local UBUNTU_MAJOR_VERSION=$(echo $VERSION_ID | cut -d. -f1)
-  if [ $UBUNTU_MAJOR_VERSION -le 22 ]; then
-    if ! dpkg -s python3-pip >/dev/null 2>&1; then
-      __task "Installing Python3 Pip"
-      _cmd "sudo apt-get install -y python3-pip"
-    fi
-    if ! pip3 list | grep watchdog >/dev/null 2>&1; then
-      __task "Installing Python3 Watchdog"
-      _cmd "sudo apt-get install -y python3-watchdog"
-    fi
-  fi
-
-    __task "Installing or upgrading Jinja2 to > 3.0"
-    _cmd "pip3 install --upgrade jinja2"
 
 }
 
@@ -129,13 +144,32 @@ function macos_setup() {
 
 update_ansible_galaxy() {
   local os=$1
-  local os_requirements=""
-  __task "Updating Ansible Galaxy"
+  local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles"
+  local cache_file="$cache_dir/ansible-galaxy.checksum"
+  local requirements_files=("$DOTFILES_DIR/requirements/common.yml")
+
   if [ -f "$DOTFILES_DIR/requirements/$os.yml" ]; then
-    __task "${OVERWRITE}Updating Ansible Galaxy with OS Config: $os"
-    os_requirements="$DOTFILES_DIR/requirements/$os.yml"
+    requirements_files+=("$DOTFILES_DIR/requirements/$os.yml")
   fi
-  _cmd "ansible-galaxy install -r $DOTFILES_DIR/requirements/common.yml $os_requirements"
+
+  local requirements_checksum
+  requirements_checksum=$(cksum "${requirements_files[@]}" | cksum | awk '{print $1 ":" $2}')
+
+  if [ -f "$cache_file" ] && [ "$(< "$cache_file")" = "$requirements_checksum" ]; then
+    __task "Ansible Galaxy requirements unchanged"
+    _task_done
+    return
+  fi
+
+  local requirements_file
+  for requirements_file in "${requirements_files[@]}"; do
+    __task "Installing Ansible dependencies from ${requirements_file#$DOTFILES_DIR/}"
+    _cmd "ansible-galaxy collection install -r '$requirements_file'"
+    _task_done
+  done
+
+  mkdir -p "$cache_dir"
+  printf '%s\n' "$requirements_checksum" > "$cache_file"
 }
 
 detect_os() {
@@ -149,19 +183,19 @@ detect_os() {
 
 function print_banner() {
   echo ""
-  echo -e "${LGREEN}   █████╗ ██████╗ ███████╗██████╗ ██╗   ██╗██╗      ██████╗ ${NC}"
-  echo -e "${LGREEN}  ██╔══██╗██╔══██╗██╔════╝██╔══██╗╚██╗ ██╔╝██║     ██╔═══██╗${NC}"
-  echo -e "${LGREEN}  ███████║██║  ██║█████╗  ██████╔╝ ╚████╔╝ ██║     ██║   ██║${NC}"
-  echo -e "${LGREEN}  ██╔══██║██║  ██║██╔══╝  ██╔══██╗  ╚██╔╝  ██║     ██║   ██║${NC}"
-  echo -e "${LGREEN}  ██║  ██║██████╔╝███████╗██║  ██║   ██║   ███████╗╚██████╔╝${NC}"
-  echo -e "${LGREEN}  ╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝ ${NC}"
+  echo -e "${CAT_SAPPHIRE}   █████╗ ██████╗ ███████╗██████╗ ██╗   ██╗██╗      ██████╗ ${NC}"
+  echo -e "${CAT_SAPPHIRE}  ██╔══██╗██╔══██╗██╔════╝██╔══██╗╚██╗ ██╔╝██║     ██╔═══██╗${NC}"
+  echo -e "${CAT_SAPPHIRE}  ███████║██║  ██║█████╗  ██████╔╝ ╚████╔╝ ██║     ██║   ██║${NC}"
+  echo -e "${CAT_SAPPHIRE}  ██╔══██║██║  ██║██╔══╝  ██╔══██╗  ╚██╔╝  ██║     ██║   ██║${NC}"
+  echo -e "${CAT_SAPPHIRE}  ██║  ██║██████╔╝███████╗██║  ██║   ██║   ███████╗╚██████╔╝${NC}"
+  echo -e "${CAT_SAPPHIRE}  ╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝ ${NC}"
   echo ""
-  echo -e "${LGREEN}      ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗${NC}"
-  echo -e "${LGREEN}      ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝${NC}"
-  echo -e "${LGREEN}      ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗${NC}"
-  echo -e "${LGREEN}      ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║${NC}"
-  echo -e "${LGREEN}      ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║${NC}"
-  echo -e "${LGREEN}      ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝${NC}"
+  echo -e "${CAT_BLUE}      ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗${NC}"
+  echo -e "${CAT_BLUE}      ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝${NC}"
+  echo -e "${CAT_BLUE}      ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗${NC}"
+  echo -e "${CAT_BLUE}      ██║  ██║██║   ██║   ██║   ██╔══╝  ██║██║     ██╔══╝  ╚════██║${NC}"
+  echo -e "${CAT_BLUE}      ██████╔╝╚██████╔╝   ██║   ██║     ██║███████╗███████╗███████║${NC}"
+  echo -e "${CAT_BLUE}      ╚═════╝  ╚═════╝    ╚═╝   ╚═╝     ╚═╝╚══════╝╚══════╝╚══════╝${NC}"
   echo ""
 }
 
@@ -190,17 +224,18 @@ else
   __task "Updating repository"
   _cmd "git -C $DOTFILES_DIR pull --quiet"
 fi
+_task_done
 
 pushd "$DOTFILES_DIR" 2>&1 > /dev/null
-update_ansible_galaxy $ID
+update_ansible_galaxy "$dotfiles_os"
 
 ansible-playbook "$DOTFILES_DIR/main.yml" "$@"
 
 popd 2>&1 > /dev/null
 
 if ! [[ -f "$IS_FIRST_RUN" ]]; then
-  echo -e "${CHECK_MARK} ${GREEN}First run complete!${NC}"
-  echo -e "${ARROW} ${CYAN}Please reboot your computer to complete the setup.${NC}"
+  echo -e "${CHECK_MARK} ${CAT_GREEN}First run complete!${NC}"
+  echo -e "${ARROW} ${CAT_TEAL}Please reboot your computer to complete the setup.${NC}"
   touch "$IS_FIRST_RUN"
 fi
 

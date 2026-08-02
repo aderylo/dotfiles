@@ -1,29 +1,49 @@
 ---
-- name: "conda | {{ ansible_distribution }} | Check if conda is installed"
+- name: "conda | {{ ansible_distribution }} | Check if conda is available on PATH"
   ansible.builtin.command: conda --version
-  register: conda_installed
+  register: conda_on_path
   failed_when: false
   changed_when: false
+
+- name: "conda | {{ ansible_distribution }} | Check the default installation path"
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/miniconda3/bin/conda"
+  register: conda_default_install
+  when: conda_on_path.rc != 0
 
 - name: "conda | {{ ansible_distribution }} | Download miniconda installer"
   ansible.builtin.get_url:
     url: "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
     dest: "/tmp/miniconda.sh"
     mode: '0755'
-  when: conda_installed.rc != 0
+  when:
+    - conda_on_path.rc != 0
+    - not conda_default_install.stat.exists
 
-- name: "conda | {{ ansible_distribution }} |  Install miniconda"
+- name: "conda | {{ ansible_distribution }} | Install miniconda"
   ansible.builtin.shell: |
     bash /tmp/miniconda.sh -b -p {{ ansible_env.HOME }}/miniconda3
   args:
     creates: "{{ ansible_env.HOME }}/miniconda3"
-  when: conda_installed.rc != 0
+  when:
+    - conda_on_path.rc != 0
+    - not conda_default_install.stat.exists
 
-- name: "conda | {{ ansible_distribution }} |  Initialize conda for shells"
-  ansible.builtin.shell: |
-    {{ ansible_env.HOME }}/miniconda3/bin/conda init bash
-    {{ ansible_env.HOME }}/miniconda3/bin/conda init zsh
-  when: conda_installed.rc != 0
+- name: "conda | {{ ansible_distribution }} | Select conda executable"
+  ansible.builtin.set_fact:
+    conda_executable: "{{ 'conda' if conda_on_path.rc == 0 else ansible_env.HOME + '/miniconda3/bin/conda' }}"
+
+- name: "conda | {{ ansible_distribution }} | Verify conda installation"
+  ansible.builtin.command: "{{ conda_executable }} --version"
+  changed_when: false
+
+- name: "conda | {{ ansible_distribution }} | Initialize conda for shells"
+  ansible.builtin.command: "{{ conda_executable }} init {{ item }}"
+  loop:
+    - bash
+    - zsh
+  register: conda_init
+  changed_when: "'No action taken.' not in conda_init.stdout"
 
 - name: "conda | Clean up installer"
   ansible.builtin.file:
